@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
+import 'coin_data.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
 }
 
+List<DropdownMenuItem> getCurrencies() {
+  List<DropdownMenuItem> currencies = [];
+  for (String cur in currenciesList) {
+    Widget currency = DropdownMenuItem(
+      value: cur,
+      child: Text(cur),
+    );
+    currencies.add(currency);
+  }
+  return currencies;
+}
+
 class _PriceScreenState extends State<PriceScreen> {
+  String currentCurrency = "USD";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('🤑 Coin Ticker'),
+        title: Center(child: Text('🤑 Coin Ticker')),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -20,7 +35,7 @@ class _PriceScreenState extends State<PriceScreen> {
             padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
             child: Card(
               color: Colors.lightBlueAccent,
-              elevation: 5.0,
+              elevation: 10.0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -42,7 +57,15 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: null,
+            child: DropdownButton(
+              value: currentCurrency,
+              items: getCurrencies(),
+              onChanged: (value) {
+                setState(() {
+                  currentCurrency = value;
+                });
+              },
+            ),
           ),
         ],
       ),
