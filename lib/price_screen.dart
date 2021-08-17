@@ -1,25 +1,83 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'coin_data.dart';
+import 'dart:io' show Platform;
+import 'package:http/http.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
 }
 
-List<DropdownMenuItem> getCurrencies() {
-  List<DropdownMenuItem> currencies = [];
-  for (String cur in currenciesList) {
-    Widget currency = DropdownMenuItem(
-      value: cur,
-      child: Text(cur),
-    );
-    currencies.add(currency);
+const kApikey = '7F66F50F-0BF0-4312-9C22-004086A23B6F';
+double exchaneRate = 0.0;
+
+Future<double> getNetworkInfo() async {
+  var url =
+      get('https://rest.coinapi.io/v1/exchangerate/BTC/USD?apikey=$kApikey');
+  Response response = await url;
+  if (response.statusCode == 200) {
+    String body = response.body;
+    var apiData = jsonDecode(body);
+    exchaneRate = apiData['rate'];
+  } else {
+    print(response.statusCode);
+    exchaneRate = 0;
   }
-  return currencies;
+  return await exchaneRate;
 }
 
 class _PriceScreenState extends State<PriceScreen> {
   String currentCurrency = "USD";
+
+  DropdownButton androidDropButton() {
+    List<DropdownMenuItem> currencies = [];
+    for (String cur in currenciesList) {
+      Widget currency = DropdownMenuItem(
+        value: cur,
+        child: Text(cur),
+      );
+      currencies.add(currency);
+    }
+    return DropdownButton(
+      value: currentCurrency,
+      items: currencies,
+      onChanged: (value) {
+        setState(() {
+          currentCurrency = value;
+        });
+      },
+    );
+  }
+
+  CupertinoPicker iosPicker() {
+    List<Widget> currencies = [];
+    for (String cur in currenciesList) {
+      Widget currency = Text(cur);
+      currencies.add(currency);
+    }
+    return CupertinoPicker(
+      scrollController: FixedExtentScrollController(initialItem: 9),
+      backgroundColor: Colors.lightBlue,
+      itemExtent: 32,
+      onSelectedItemChanged: (selectedItem) {
+        print(selectedItem);
+      },
+      children: currencies,
+    );
+  }
+
+  void testing() async {
+    double exchange = await getNetworkInfo();
+    print(exchange);
+  }
+
+  @override
+  void initState() {
+    testing();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,15 +115,7 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: DropdownButton(
-              value: currentCurrency,
-              items: getCurrencies(),
-              onChanged: (value) {
-                setState(() {
-                  currentCurrency = value;
-                });
-              },
-            ),
+            child: Platform.isIOS ? iosPicker() : androidDropButton(),
           ),
         ],
       ),

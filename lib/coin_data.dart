@@ -29,17 +29,3 @@ const List<String> cryptoList = [
 ];
 
 class CoinData {}
-
-// CupertinoPicker(
-// backgroundColor: Colors.lightBlue,
-// itemExtent: 32,
-// diameterRatio: 50,
-// onSelectedItemChanged: (selectedItem) {
-// print(selectedItem);
-// },
-// children: [
-// Text('USD'),
-// Text('INR'),
-// Text('GNB'),
-// ],
-// )
