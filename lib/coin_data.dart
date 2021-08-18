@@ -1,5 +1,5 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 const List<String> currenciesList = [
   'AUD',
@@ -31,20 +31,25 @@ const List<String> cryptoList = [
   'LTC',
 ];
 
-const kApikey = '7F66F50F-0BF0-4312-9C22-004086A23B6F';
-const kUrl = 'https://rest.coinapi.io/v1/exchangerate/';
+const coinAPIURL = 'https://rest.coinapi.io/v1/exchangerate';
+const apiKey = '9A591972-51DC-4E1D-A19B-766585332D74';
 
 class CoinData {
-  double exchangeRate;
-  Future<double> getNetworkInfo(String curCur) async {
-    var url = http.get('${kUrl}BTC/$curCur?apikey=$kApikey');
-    http.Response response = await url;
-    if (response.statusCode == 200) {
-      exchangeRate = jsonDecode(response.body)['rate'];
-    } else {
-      print(response.statusCode);
-      throw ('not possible to proceed');
+  List<String> cryptoPrices = [];
+  Future<List> getCoinData(String selectedCurrency) async {
+    for (String crypto in cryptoList) {
+      String requestURL =
+          '$coinAPIURL/$crypto/$selectedCurrency?apikey=$apiKey';
+      http.Response response = await http.get(requestURL);
+      if (response.statusCode == 200) {
+        var decodedData = jsonDecode(response.body);
+        var lastPrice = decodedData['rate'];
+        cryptoPrices.add(lastPrice.toStringAsFixed(0));
+      } else {
+        print(response.statusCode);
+        throw 'Problem with the get request';
+      }
     }
-    return exchangeRate;
+    return cryptoPrices;
   }
 }

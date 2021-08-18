@@ -9,139 +9,90 @@ class PriceScreen extends StatefulWidget {
 }
 
 class _PriceScreenState extends State<PriceScreen> {
-  String currentCurrency = "INR";
+  String selectedCurrency = 'AUD';
 
-  DropdownButton dropButton() {
-    List<DropdownMenuItem> currencies = [];
-    for (String cur in currenciesList) {
-      Widget currency = DropdownMenuItem(
-        value: cur,
-        child: Text(cur),
+  DropdownButton<String> androidDropdown() {
+    List<DropdownMenuItem<String>> dropdownItems = [];
+    for (String currency in currenciesList) {
+      var newItem = DropdownMenuItem(
+        child: Text(currency),
+        value: currency,
       );
-      currencies.add(currency);
+      dropdownItems.add(newItem);
     }
-    return DropdownButton(
-      value: currentCurrency,
-      items: currencies,
+
+    return DropdownButton<String>(
+      value: selectedCurrency,
+      items: dropdownItems,
       onChanged: (value) {
         setState(() {
-          currentCurrency = value;
-          getData(value);
+          selectedCurrency = value;
+          getData();
         });
       },
     );
   }
 
-  CupertinoPicker sliderPicker() {
-    List<Widget> currencies = [];
-    for (String cur in currenciesList) {
-      Widget currency = Text(cur);
-      currencies.add(currency);
+  CupertinoPicker iOSPicker() {
+    List<Text> pickerItems = [];
+    for (String currency in currenciesList) {
+      pickerItems.add(Text(currency));
     }
+
     return CupertinoPicker(
-      scrollController: FixedExtentScrollController(initialItem: 9),
       backgroundColor: Colors.lightBlue,
-      itemExtent: 32,
-      onSelectedItemChanged: (selectedItem) {
-        currentCurrency = currenciesList[selectedItem];
-        getData(currenciesList[selectedItem]);
+      itemExtent: 32.0,
+      onSelectedItemChanged: (selectedIndex) {
+        setState(() {
+          selectedCurrency = currenciesList[selectedIndex];
+          getData();
+        });
       },
-      children: currencies,
+      children: pickerItems,
     );
   }
 
-  String bitcoinValue = '?';
+  List<String> value = [];
 
-  void getData(String diffCur) async {
+  bool isWaiting;
+  void getData() async {
+    isWaiting = true;
     try {
-      double data = await CoinData().getNetworkInfo(diffCur);
+      List data = await CoinData().getCoinData(selectedCurrency);
+      isWaiting = false;
       setState(() {
-        bitcoinValue = data.toStringAsFixed(0);
+        value = data;
       });
     } catch (e) {
       print(e);
+      print('cant work');
     }
   }
 
   @override
   void initState() {
     super.initState();
-    getData('INR');
+    getData();
   }
+
+  //TODO: For bonus points, create a method that loops through the cryptoList and generates a CryptoCard for each.
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: Text('🤑 Coin Ticker')),
+        title: Text('🤑 Coin Ticker'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 10.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $bitcoinValue $currentCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 10.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $bitcoinValue $currentCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 10.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $bitcoinValue $currentCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          CardWidget(
+              cryptoList[0], isWaiting ? ' ? ' : value[0], selectedCurrency),
+          CardWidget(
+              cryptoList[1], isWaiting ? ' ? ' : value[1], selectedCurrency),
+          CardWidget(
+              cryptoList[2], isWaiting ? ' ? ' : value[2], selectedCurrency),
           SizedBox(
             height: 300,
           ),
@@ -150,9 +101,43 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: Platform.isAndroid ? sliderPicker() : dropButton(),
+            child: Platform.isAndroid ? iOSPicker() : androidDropdown(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// whenever there arer more than 1 widget of the same type then always just make class of it use use it efficiently
+class CardWidget extends StatelessWidget {
+  CardWidget(this.cryptoCurrency, this.value, this.selectedCurrencies);
+
+  final String value;
+  final String selectedCurrencies;
+  final String cryptoCurrency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      child: Card(
+        color: Colors.lightBlueAccent,
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text(
+            '1 $cryptoCurrency = $value $selectedCurrencies',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
